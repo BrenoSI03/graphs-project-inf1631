@@ -1,5 +1,9 @@
 # Projeto de Grafos — circuito de Euler
 
+Dante Honorato 2321406
+
+Breno Soares 2320363
+
 Requer Python 3 e usa apenas a biblioteca padrão.
 
 Parâmetros do **grupo F**: `n = 10`, `p = 0,30` e `seed = 641`. Use esses mesmos valores nos dois experimentos.

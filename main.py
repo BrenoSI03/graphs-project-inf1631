@@ -1,4 +1,5 @@
-"""Experimentos com circuitos de Euler em grafos aleatórios simples."""
+# Dante Honorato 2321406
+# Breno Soares 2320363
 
 import argparse
 import random
@@ -47,8 +48,10 @@ def euleriano(grafo):
     """Exige ruas, conectividade dos vértices ativos e graus pares."""
     graus_grafo = graus(grafo)
     ha_arestas = any(graus_grafo.values())
-    return ha_arestas and conexo(grafo) and all(
-        grau % 2 == 0 for grau in graus_grafo.values()
+    return (
+        ha_arestas
+        and conexo(grafo)
+        and all(grau % 2 == 0 for grau in graus_grafo.values())
     )
 
 
@@ -130,16 +133,22 @@ def executar(p, seed):
         print(f"  {vertice:>2}: {vizinhos}")
     print(f"Arestas ({len(arestas)}):")
     for posicao in range(0, len(arestas), 5):
-        print("  " + "  ".join(f"({u}, {v})" for u, v in arestas[posicao:posicao + 5]))
+        print(
+            "  " + "  ".join(f"({u}, {v})" for u, v in arestas[posicao : posicao + 5])
+        )
     print("Graus:")
     for vertice, grau in graus_grafo.items():
         print(f"  v{vertice}: {grau}")
     print(f"Conexo (vértices não isolados): {'sim' if conexo(grafo) else 'não'}")
-    print(f"Todos os graus são pares: {'sim' if all(g % 2 == 0 for g in graus_grafo.values()) else 'não'}")
+    print(
+        f"Todos os graus são pares: {'sim' if all(g % 2 == 0 for g in graus_grafo.values()) else 'não'}"
+    )
     print(f"Euleriano: {'sim' if euleriano(grafo) else 'não'}")
     print("Circuito de Euler:")
     print("  " + " -> ".join(map(str, circuito)))
-    print(f"Validação do circuito: {'OK' if valida_circuito(grafo, circuito) else 'FALHOU'}")
+    print(
+        f"Validação do circuito: {'OK' if valida_circuito(grafo, circuito) else 'FALHOU'}"
+    )
 
     gerador = random.Random(seed)
     inicio = time.perf_counter()
@@ -153,8 +162,12 @@ def executar(p, seed):
 
 
 if __name__ == "__main__":
-    analisador = argparse.ArgumentParser(description="Experimentos com circuitos de Euler")
-    analisador.add_argument("p", type=float, help="probabilidade de cada aresta (0 < p < 1)")
+    analisador = argparse.ArgumentParser(
+        description="Experimentos com circuitos de Euler"
+    )
+    analisador.add_argument(
+        "p", type=float, help="probabilidade de cada aresta (0 < p < 1)"
+    )
     analisador.add_argument("seed", type=int, help="semente do gerador aleatório")
     argumentos = analisador.parse_args()
     try:

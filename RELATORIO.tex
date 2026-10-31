@@ -1,0 +1,362 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+\fi
+\usepackage[brazil]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=2.2cm,headheight=15pt]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,tabularx,array}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+\definecolor{azul}{HTML}{23445D}
+\definecolor{cinza}{HTML}{52616B}
+\hypersetup{colorlinks=true,linkcolor=azul,urlcolor=azul,
+  pdftitle={Circuitos de Euler em grafos aleatórios - Grupo F},
+  pdfauthor={Grupo F},pdfsubject={Projeto de Estruturas Discretas - INF1631}}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{cinza}{INF1631 | Estruturas Discretas}}
+\fancyhead[R]{\small\textcolor{cinza}{Grupo F}}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setlength{\emergencystretch}{1.5em}
+\renewcommand{\arraystretch}{1.2}
+\setlist{nosep,leftmargin=*}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\funcao}[1]{\texttt{#1}}
+
+\begin{document}
+
+\begin{center}
+  {\small\textcolor{cinza}{PROJETO DE ESTRUTURAS DISCRETAS | INF1631 - 3WB}}\\[10pt]
+  {\LARGE\bfseries\textcolor{azul}{Circuitos de Euler\\[3pt]em grafos aleatórios}}\\[8pt]
+  {\large Relatório de implementação e resultados}\\[6pt]
+  {Grupo F \quad | \quad 31 de outubro de 2026}
+\end{center}
+\vspace{4pt}
+
+\section{Objetivo e parâmetros}
+
+O projeto investiga se um robô consegue inspecionar todas as ruas de uma rede,
+percorrendo cada rua exatamente uma vez e retornando ao cruzamento inicial.
+A rede é representada por um grafo simples não direcionado: os vértices são
+os cruzamentos e as arestas são as ruas. A missão corresponde à existência
+de um circuito de Euler.
+
+Foram realizados dois experimentos: gerar grafos até encontrar o primeiro
+Euleriano e classificar uma amostra de 1.000 grafos. Os parâmetros oficiais
+do grupo F foram mantidos em ambos:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Parâmetro & Valor & Significado \\
+\midrule
+$n$ & $10$ & Número de vértices \\
+$p$ & $0{,}30$ & Probabilidade de inclusão de cada aresta \\
+\textit{Seed} & $641$ & Semente do gerador pseudoaleatório \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+O conjunto de vértices é $V=\{1,2,\ldots,10\}$. Para cada um dos
+$\binom{10}{2}=45$ pares distintos, o programa faz um sorteio e inclui a
+aresta quando o valor obtido é menor que $p$. Cada par é considerado uma
+única vez, impedindo laços e arestas duplicadas. O programa não constrói
+deliberadamente um grafo Euleriano.
+
+\section{Fundamentação e reprodutibilidade}
+
+Para um grafo com arestas, a existência de um circuito de Euler exige que
+todos os vértices de grau não nulo pertençam à mesma componente conexa e
+tenham grau par. A paridade permite que cada chegada a um vértice seja
+associada a uma saída. A conectividade garante que todas as arestas possam
+ser alcançadas em um único percurso.
+
+Vértices isolados não impedem a inspeção das ruas, pois não possuem arestas
+a percorrer. Para o caso sem nenhuma aresta, adotou-se explicitamente a
+convenção de não considerar a rede uma solução de inspeção. Esse caso é
+tratado no código e nos testes.
+
+Cada experimento começa com \funcao{random.Random(641)}. Dentro de cada
+experimento, o estado do gerador avança normalmente, sem reinicialização
+a cada grafo. O segundo experimento reinicia a mesma sequência da busca,
+permitindo reproduzir os resultados com o mesmo código e ambiente.
+
+\newpage
+\section{Descrição da implementação}
+
+A implementação foi escrita em Python e utiliza apenas a biblioteca padrão:
+\funcao{random} para os sorteios, \funcao{time} para a medição e
+\funcao{argparse} para receber os parâmetros. Os algoritmos de grafos foram
+implementados diretamente, sem bibliotecas que determinem a existência
+de um circuito ou o construam automaticamente.
+
+O grafo é armazenado em um dicionário que associa cada vértice a um conjunto
+de vizinhos. Ao incluir $\{u,v\}$, o programa adiciona $v$ aos vizinhos de $u$
+e $u$ aos vizinhos de $v$, preservando a representação não direcionada.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}p{4.15cm}Y@{}}
+\toprule
+Função & Procedimento implementado \\
+\midrule
+\funcao{gerar\_grafo(n,p)} & Percorre os pares $u<v$ e sorteia a presença de cada aresta. Recebe opcionalmente o objeto gerador. \\
+\addlinespace[3pt]
+\funcao{graus(G)} & Retorna a quantidade de vizinhos de cada vértice. \\
+\addlinespace[3pt]
+\funcao{conexo(G)} & Usa uma busca em profundidade com pilha e compara os vértices visitados com os vértices de grau não nulo. \\
+\addlinespace[3pt]
+\funcao{euleriano(G)} & Exige pelo menos uma aresta, conectividade dos vértices ativos e paridade de todos os graus. \\
+\addlinespace[3pt]
+\funcao{circuito\_euler(G)} & Executa o algoritmo de Hierholzer sobre uma cópia das adjacências. Retorna \funcao{None} se não houver solução. \\
+\addlinespace[3pt]
+\funcao{valida\_circuito(G,C)} & Verifica fechamento, número de passos, existência das arestas, ausência de repetição e cobertura de todas as arestas. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Construção do circuito}
+
+O algoritmo de Hierholzer começa no menor vértice que possui arestas.
+Enquanto há uma aresta disponível no vértice do topo da pilha, o programa
+escolhe o menor vizinho, remove a aresta nos dois sentidos e avança. Quando
+não há arestas disponíveis, retira o vértice da pilha e o acrescenta à
+lista de saída. A inversão dessa lista produz o circuito.
+
+A escolha do menor vizinho torna a apresentação do percurso determinística.
+A remoção ocorre em uma cópia do grafo, preservando o original para a
+exibição e para a validação posterior.
+
+\subsection{Validação automática}
+
+O validador representa cada aresta não direcionada pela dupla
+$(\min(u,v),\max(u,v))$. Ele exige que o circuito seja fechado e contenha
+$|E|+1$ vértices, isto é, $|E|$ deslocamentos. Cada deslocamento deve
+corresponder a uma aresta existente e ainda não utilizada. Ao final,
+o conjunto percorrido deve ser exatamente igual ao conjunto de arestas
+do grafo. Assim, a verificação não depende somente da inspeção visual.
+
+\newpage
+\section{Primeiro experimento: busca por um grafo Euleriano}
+
+A busca encontrou o primeiro grafo Euleriano na \textbf{tentativa 818}.
+Os 817 grafos anteriores foram rejeitados pelo critério implementado.
+O grafo encontrado possui 10 vértices e 10 arestas, listadas abaixo:
+
+\[
+\begin{aligned}
+E=\{\,&(2,6),(2,10),(3,5),(3,6),(3,8),\\
+      &(3,10),(5,8),(6,8),(6,10),(8,10)\,\}.
+\end{aligned}
+\]
+
+\begin{center}
+\begin{minipage}[c]{0.56\textwidth}
+\centering
+\begin{tikzpicture}[scale=1.25,
+  vertice/.style={circle,draw=azul,line width=0.8pt,fill=white,
+    minimum size=6mm,inner sep=0pt,font=\small},
+  isolado/.style={vertice,draw=cinza,text=cinza},
+  aresta/.style={draw=azul,line width=0.85pt}]
+  \coordinate (p2) at (-2.2,-0.6);
+  \coordinate (p6) at (-1.3,1.6);
+  \coordinate (p8) at (1.3,1.6);
+  \coordinate (p10) at (0,-1.2);
+  \coordinate (p3) at (0,0);
+  \coordinate (p5) at (0.05,1);
+  \foreach \u/\v in {2/6,2/10,3/5,3/6,3/8,3/10,5/8,6/8,6/10,8/10}
+    \draw[aresta] (p\u) -- (p\v);
+  \foreach \v in {2,3,5,6,8,10}
+    \node[vertice] at (p\v) {\v};
+  \foreach \v/\x in {1/-2,4/-1,7/0,9/1}
+    \node[isolado] at (\x,-2.05) {\v};
+  \node[font=\small,text=cinza] at (-0.5,-2.55) {Vértices isolados};
+\end{tikzpicture}
+
+\small Figura 1: grafo encontrado na tentativa 818.
+\end{minipage}\hfill
+\begin{minipage}[c]{0.40\textwidth}
+\centering
+\small
+\begin{tabular}{cc}
+\toprule
+Vértice & Grau \\
+\midrule
+1 & 0 \\
+2 & 2 \\
+3 & 4 \\
+4 & 0 \\
+5 & 2 \\
+6 & 4 \\
+7 & 0 \\
+8 & 4 \\
+9 & 0 \\
+10 & 4 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{center}
+
+Os vértices ativos são $\{2,3,5,6,8,10\}$ e pertencem à mesma componente
+conexa. Seus graus são pares. A soma dos graus é $20=2|E|$, consistente
+com as 10 arestas. Os vértices $1$, $4$, $7$ e $9$ são isolados e não
+precisam ser visitados para percorrer todas as ruas.
+
+\subsection{Circuito encontrado e validado}
+
+\[
+\boxed{2\to6\to3\to5\to8\to3\to10\to6\to8\to10\to2}
+\]
+
+O percurso começa e termina no vértice 2. Seus 10 deslocamentos usam
+exatamente as 10 arestas do grafo, sem repetição. O validador retornou
+\textbf{OK}. A repetição de vértices no percurso é permitida; a restrição
+de uso único se aplica às arestas.
+
+Embora o grafo completo tenha vértices isolados, sua componente com arestas
+é conexa. Portanto, ele atende ao critério de conectividade solicitado e
+permite realizar a missão de inspeção.
+
+\newpage
+\section{Segundo experimento: amostra de 1.000 grafos}
+
+O gerador foi reinicializado com a \textit{seed} 641 e foram gerados
+exatamente 1.000 grafos com $n=10$ e $p=0{,}30$. Não houve alteração dos
+parâmetros nem reinicialização entre os grafos da amostra.
+
+A medição com \funcao{time.perf\_counter()} envolve somente a criação
+da lista dos 1.000 grafos. O teste de existência de circuito de Euler
+é executado depois do encerramento da medição. Assim, o tempo informado
+corresponde à geração e ao armazenamento dos grafos, sem incluir sua
+classificação ou a impressão dos resultados.
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Medida & Resultado \\
+\midrule
+Grafos gerados & 1.000 \\
+Grafos Eulerianos & 1 \\
+Grafos não Eulerianos & 999 \\
+Proporção de Eulerianos & $0{,}001$ \\
+Percentual de Eulerianos & $0{,}1\%$ \\
+Tempo de geração observado & $0{,}011571\ \mathrm{s}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A proporção foi calculada conforme o enunciado:
+\[
+\widehat{p}_{\mathrm{Euler}}
+  =\frac{\text{número de grafos Eulerianos}}{1000}
+  =\frac{1}{1000}=0{,}001=0{,}1\%.
+\]
+
+O tempo acima foi observado em uma execução em 31/10/2026, com
+Python 3.12.8, macOS 26.5 e arquitetura arm64. É uma medição de execução,
+não uma constante do algoritmo: carga do sistema e equipamento podem
+alterá-la. As contagens, o grafo e o circuito são reproduzíveis com
+a mesma implementação e o mesmo estado inicial do gerador.
+
+\subsection{Análise dos resultados}
+
+A ocorrência de apenas um Euleriano indica baixa frequência na amostra
+observada. O resultado é compatível com a necessidade de satisfazer
+simultaneamente a paridade dos graus e a conectividade dos vértices ativos.
+A proporção empírica não deve ser interpretada como a probabilidade exata
+do modelo, pois foi calculada a partir de uma amostra finita.
+
+Os graus pares são necessários para sair de cada vértice após uma chegada
+e retornar ao ponto inicial. Entretanto, paridade sozinha não basta:
+duas componentes cíclicas separadas possuem todos os graus pares, mas
+não permitem percorrer todas as arestas em um único circuito. Da mesma
+forma, um grafo conexo com vértices de grau ímpar pode impedir o circuito,
+como ocorre no caminho $P_4$.
+
+Como o segundo experimento reinicia a mesma sequência pseudoaleatória,
+o grafo da tentativa 818 reaparece na posição 818 da amostra. Ele é o único
+Euleriano entre os primeiros 1.000 grafos dessa sequência. Portanto, os
+dois resultados são consistentes, mas não representam duas amostras
+independentes entre si. Dentro da amostra de 1.000 grafos, cada grafo
+é produzido com novos sorteios, conforme o modelo solicitado.
+
+\newpage
+\section{Testes e execução}
+
+Os testes estão organizados em \funcao{test\_grafos.py}, utilizando
+\funcao{unittest}. Os quatro casos obrigatórios foram executados com
+os seguintes resultados:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}p{3.35cm}YY@{}}
+\toprule
+Caso & Resultado esperado & Resultado obtido \\
+\midrule
+Ciclo $C_4$ & Circuito válido. & Euleriano; circuito validado e grafo original preservado. \\
+\addlinespace[4pt]
+Caminho $P_4$ & Ausência de circuito de Euler. & Rejeitado por possuir vértices de grau ímpar. \\
+\addlinespace[4pt]
+Duas componentes cíclicas & Ausência de circuito de Euler. & Rejeitadas pela falta de conectividade entre vértices ativos. \\
+\addlinespace[4pt]
+Grafo sem arestas & Tratamento explícito. & Não Euleriano pela convenção de inspeção; construção retorna \funcao{None}. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Também foram executados testes adicionais para vértices isolados,
+rejeição de percursos inválidos e geração reproduzível, incluindo
+os extremos $p=0$ e $p=1$ na função geradora. Esses casos unitários
+servem para testar a implementação; os dois experimentos do grupo usam
+exclusivamente $n=10$, $p=0{,}30$ e \textit{seed} 641.
+O resultado da suíte foi \textbf{7 testes executados e aprovados}.
+
+\subsection{Reprodução}
+
+Não são necessárias bibliotecas externas para executar o programa.
+Na pasta do projeto, os comandos são:
+
+\begin{quote}
+\ttfamily\small
+python3 -X utf8 main.py 0.30 641\\[4pt]
+python3 -m unittest -v test\_grafos
+\end{quote}
+
+Em ambientes que disponibilizam o interpretador como \funcao{python},
+basta substituir \funcao{python3}. O arquivo \funcao{README.md} contém
+as instruções de execução e de compilação deste relatório.
+
+\section{Conclusão}
+
+Foi implementado um programa que gera redes aleatórias, aplica os critérios
+matemáticos de existência de circuito de Euler, constrói um percurso
+por Hierholzer e o valida automaticamente. Com os parâmetros do grupo F,
+a primeira solução apareceu após 818 grafos. O circuito encontrado
+percorre as 10 arestas uma única vez e retorna ao ponto inicial.
+
+Na amostra de 1.000 grafos, apenas um foi Euleriano, correspondendo a
+$0{,}1\%$. O resultado evidencia, nessa execução, a baixa frequência
+de redes que satisfazem simultaneamente as condições de grau e
+conectividade. Os testes confirmaram os comportamentos esperados,
+incluindo o tratamento de vértices isolados e de grafos sem arestas.
+
+\vfill
+{\footnotesize\textcolor{cinza}{\textbf{Base do trabalho:} enunciado
+\textit{Projeto de Estruturas Discretas -- Grafos}, INF1631 - 3WB, 2026,
+e tabela de parâmetros por grupo fornecida na disciplina.
+Implementação e testes: \funcao{main.py} e \funcao{test\_grafos.py}.}}
+
+\end{document}

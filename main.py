@@ -143,13 +143,11 @@ def executar(p, seed):
 
     gerador = random.Random(seed)
     inicio = time.perf_counter()
-    quantidade = 0
-    for _ in range(1000):
-        if euleriano(gerar_grafo(n, p, gerador)):
-            quantidade += 1
+    grafos = [gerar_grafo(n, p, gerador) for _ in range(1000)]
     tempo = time.perf_counter() - inicio
+    quantidade = sum(euleriano(grafo) for grafo in grafos)
     print("\n=== Experimento com 1000 grafos ===")
-    print(f"Tempo total: {tempo:.6f} s")
+    print(f"Tempo de geração: {tempo:.6f} s")
     print(f"Grafos Eulerianos: {quantidade}")
     print(f"Proporção: {quantidade / 1000:.3f}")
 

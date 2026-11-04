@@ -299,9 +299,7 @@ independentes entre si. Dentro da amostra de 1.000 grafos, cada grafo
 \newpage
 \section{Testes e execução}
 
-Os testes estão organizados em \funcao{test\_grafos.py}, utilizando
-\funcao{unittest}. Os quatro casos obrigatórios foram executados com
-os seguintes resultados:
+Os quatro casos obrigatórios foram executados com os seguintes resultados:
 
 \begin{center}
 \small
@@ -330,17 +328,16 @@ O resultado da suíte foi \textbf{7 testes executados e aprovados}.
 \subsection{Reprodução}
 
 Não são necessárias bibliotecas externas para executar o programa.
-Na pasta do projeto, os comandos são:
+Na pasta do projeto, execute:
 
 \begin{quote}
 \ttfamily\small
-python3 -X utf8 main.py 0.30 641\\[4pt]
-python3 -m unittest -v test\_grafos
+python3 -X utf8 main.py 0.30 641
 \end{quote}
 
 Em ambientes que disponibilizam o interpretador como \funcao{python},
 basta substituir \funcao{python3}. O arquivo \funcao{README.md} contém
-as instruções de execução e de compilação deste relatório.
+as instruções para executar o programa.
 
 \section{Conclusão}
 
@@ -355,11 +352,5 @@ $0{,}1\%$. O resultado evidencia, nessa execução, a baixa frequência
 de redes que satisfazem simultaneamente as condições de grau e
 conectividade. Os testes confirmaram os comportamentos esperados,
 incluindo o tratamento de vértices isolados e de grafos sem arestas.
-
-\vfill
-{\footnotesize\textcolor{cinza}{\textbf{Base do trabalho:} enunciado
-\textit{Projeto de Estruturas Discretas -- Grafos}, INF1631 - 3WB, 2026,
-e tabela de parâmetros por grupo fornecida na disciplina.
-Implementação e testes: \funcao{main.py} e \funcao{test\_grafos.py}.}}
 
 \end{document}
